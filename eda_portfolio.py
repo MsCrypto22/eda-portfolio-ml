@@ -11,7 +11,7 @@ from scipy.optimize import minimize
 from datetime import datetime
 from sklearn.model_selection import train_test_split
 
-tickers = ['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'TSLA']
+tickers = ['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'TSLA', 'IONQ', 'NVDA']
 end_date = datetime.now().strftime('%Y-%m-%d')
 data = yf.download(tickers, start='2015-01-01', end=end_date)['Close']
 print(yf.download(tickers, start='2015-01-01', end=end_date).columns)
