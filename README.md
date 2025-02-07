@@ -47,6 +47,7 @@ pip install -r requirements.txt
 
 ## Contributing
 Feel free to fork this repository and submit pull requests for improvements or additional features.
+- Will be adding more code to this eda over time
 
 ## License
 This project is licensed under the MIT License.
