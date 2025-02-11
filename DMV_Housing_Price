@@ -1,0 +1,67 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from statsmodels.tsa.arima.model import ARIMA
+from sklearn.metrics import mean_absolute_error, mean_squared_error
+
+# Load the HPI data for Maryland and Virginia
+url_md = 'https://www.fhfa.gov/DataTools/Downloads/Documents/HPI/HPI_AT_state_md.txt'
+url_va = 'https://www.fhfa.gov/DataTools/Downloads/Documents/HPI/HPI_AT_state_va.txt'
+
+df_md = pd.read_csv(url_md, skiprows=1, delim_whitespace=True)
+df_va = pd.read_csv(url_va, skiprows=1, delim_whitespace=True)
+
+# Combine the datasets
+df_md['State'] = 'Maryland'
+df_va['State'] = 'Virginia'
+df = pd.concat([df_md, df_va])
+
+# Convert 'Year' and 'Quarter' into a datetime column
+df['Date'] = pd.to_datetime(df['Year'].astype(str) + 'Q' + df['Quarter'].astype(str).str[1], errors='coerce')
+
+# Set the datetime column as the index
+df.set_index('Date', inplace=True)
+
+# Plot the HPI trends
+plt.figure(figsize=(12, 6))
+for state in df['State'].unique():
+    plt.plot(df[df['State'] == state]['HPI'], label=state)
+plt.title('House Price Index (HPI) Trends')
+plt.xlabel('Year')
+plt.ylabel('HPI')
+plt.legend()
+plt.show()
+
+# Forecasting for Maryland
+df_md = df[df['State'] == 'Maryland'].copy()
+df_md = df_md.asfreq('Q')
+df_md['HPI'] = df_md['HPI'].interpolate()
+
+# Split into train and test sets
+train_size = int(len(df_md) * 0.8)
+train, test = df_md['HPI'][:train_size], df_md['HPI'][train_size:]
+
+# Fit ARIMA model
+model = ARIMA(train, order=(5, 1, 0))
+model_fit = model.fit()
+
+# Forecast
+forecast = model_fit.forecast(steps=len(test))
+forecast = pd.Series(forecast, index=test.index)
+
+# Evaluate the model
+mae = mean_absolute_error(test, forecast)
+rmse = np.sqrt(mean_squared_error(test, forecast))
+print(f'Mean Absolute Error: {mae}')
+print(f'Root Mean Squared Error: {rmse}')
+
+# Plot the forecast
+plt.figure(figsize=(12, 6))
+plt.plot(train, label='Training Data')
+plt.plot(test, label='Actual Prices')
+plt.plot(forecast, label='Forecasted Prices')
+plt.title('Maryland Housing Price Forecast')
+plt.xlabel('Year')
+plt.ylabel('HPI')
+plt.legend()
+plt.show()
